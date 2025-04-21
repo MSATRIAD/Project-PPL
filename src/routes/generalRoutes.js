@@ -6,6 +6,7 @@ const historyController = require('../controllers/historyController')
 
 router.get('/articles', articleController.getArticles);
 router.post('/recycling-info', recycleController.getRecyclingInfo);
+router.post('/recycling-predict', recycleController.getRecyclePredict);
 router.get('/history', historyController.getHistory);
 router.get('/historyById', historyController.getHistoryById);
 
