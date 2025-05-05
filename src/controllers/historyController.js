@@ -16,7 +16,7 @@ exports.getHistory = async (req, res) => {
     res.status(201).send(userHistory);
   } catch (err) {
     console.error(err);
-    res.statu(500).send("Server error");
+    res.status(500).send("Server error");
   }
 };
 
