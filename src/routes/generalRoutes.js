@@ -13,5 +13,6 @@ router.get('/historyById', historyController.getHistoryById);
 router.get('/users/:id', profileController.getProfile);
 router.put('/users/edit/:id', profileController.editProfile);
 router.delete('/users/:id', profileController.deleteProfile);
+router.post('/users/upload-profile',profileController.uploadProfilePicture);
 
 module.exports = router;

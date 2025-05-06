@@ -1,36 +1,12 @@
+const axios = require('axios');
+const FormData = require('form-data');
 const pool = require("../config/db");
-
-exports.getRecyclingInfo = async (req, res) => {
-  try {
-    const { materialType } = req.body; 
-
-    const result = await pool.query(
-      `SELECT * FROM recycle_info WHERE material_type = $1`,
-      [materialType]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).send("Tidak ada Infromasi Daur Ulang mengenai sampah ini");
-    }
-
-    const recyclingInfo = result.rows[0];
-    res.json({
-      material_type: recyclingInfo.material_type,
-      can_be_recycled: recyclingInfo.can_be_recycled,
-      recycle_process: recyclingInfo.recycle_process,
-      possible_products: recyclingInfo.possible_products,
-    });
-  } catch (err) {
-    console.error('Error retrieving recycling info:', err.message);
-    res.status(500).send("Error retrieving recycling information");
-  }
-};
 
 exports.getRecyclePredict = async (req, res) => {
   try {
     const file = req.file;
     if (!file) {
-      return res.status(404).send("File is required");
+      return res.status(400).send("File is required");
     }
 
     const form = new FormData();
@@ -42,32 +18,64 @@ exports.getRecyclePredict = async (req, res) => {
       },
     });
 
-    const prediction_id = modelResponse.data.prediction;
-    const predictionResult = await pool.query(
-      "SELECT * FROM recycle_info WHERE prediction_id = $1",
-      [prediction_id]
-    );
-
-    const { predict } = predictionResult;
+    const prediction = modelResponse.data.prediction;
     const image_url = modelResponse.data.file_url;
-    const prediction_result = predict;
     const user_id = req.user.user_id;
 
-    const saved = await pool.query(
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const countResult = await pool.query(
+      `SELECT COUNT(*) FROM prediction_logs 
+       WHERE user_id = $1 
+         AND prediction_result = $2 
+         AND created_at BETWEEN $3 AND $4`,
+      [user_id, prediction, todayStart, todayEnd]
+    );
+
+    const predictionCount = parseInt(countResult.rows[0].count);
+
+    await pool.query(
+      `INSERT INTO prediction_logs (user_id, prediction_result) VALUES ($1, $2)`,
+      [user_id, prediction]
+    );
+
+    if (predictionCount < 5) {
+      await pool.query(
+        `UPDATE users SET exp = exp + 10 WHERE user_id = $1`,
+        [user_id]
+      );
+    }
+
+    await pool.query(
       `INSERT INTO result_history (image_url, prediction_result, user_id)
        VALUES ($1, $2, $3)`,
-      [image_url, prediction_result, user_id]
+      [image_url, prediction, user_id]
     );
-    if (saved) {
-      return res
-        .status(201)
-        .send(
-          "Here's the analyze result. Analyze Result has been saved to your history",
-          predictionResult
-        );
+
+    const recyclingInfoQuery = await pool.query(
+      `SELECT * FROM recycle_info WHERE material_type = $1`,
+      [prediction]
+    );
+
+    if (recyclingInfoQuery.rows.length === 0) {
+      return res.status(404).send("Tidak ada informasi daur ulang untuk hasil prediksi ini");
     }
+
+    const info = recyclingInfoQuery.rows[0];
+
+    return res.status(200).json({
+      prediction: prediction,
+      image_url: image_url,
+      recycling_info: {
+        possible_products: info.possible_products,
+      },
+    });
+
   } catch (err) {
-    console.error("Error retrieving recycling info:", err.message);
-    res.status(500).send("Error retrieving recycling information");
+    console.error("Error in getRecyclePredict:", err.message);
+    res.status(500).send("Terjadi kesalahan saat memproses prediksi");
   }
 };

@@ -278,3 +278,105 @@ exports.renderResetPasswordPage = async (req, res) => {
     res.status(500).send('Error rendering reset page');
   }
 };
+
+exports.resendEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const userResult = await pool.query(
+      'SELECT * FROM users WHERE email = $1',
+      [email]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).send('User tidak ditemukan');
+    }
+
+    const user = userResult.rows[0];
+
+    if (user.is_verified) {
+      return res.status(400).send('Email sudah terverifikasi');
+    }
+
+    await pool.query(
+      'DELETE FROM verification_tokens WHERE user_id = $1',
+      [user.user_id]
+    );
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60); // 1 jam
+
+    await pool.query(
+      'INSERT INTO verification_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
+      [user.user_id, token, expiresAt]
+    );
+
+    const transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const verificationLink = `http://localhost:5000/auth/verify-email/${user.user_id}/${token}`;
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: 'Verify your email (Resend)',
+      html: `<p>Click this link to verify your email: <a href="${verificationLink}">${verificationLink}</a></p>`,
+    });
+
+    res.status(200).send('Email verifikasi telah dikirim ulang');
+  } catch (err) {
+    console.error('Error resending email:', err.message);
+    res.status(500).send('Gagal mengirim ulang email verifikasi');
+  }
+};
+
+exports.resendForgotPasswordEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const user = result.rows[0];
+
+    if (!user) {
+      return res.status(404).send('User tidak ditemukan');
+    }
+
+    await pool.query('DELETE FROM password_reset_tokens WHERE user_id = $1', [user.user_id]);
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 3600000); 
+
+    await pool.query(
+      `INSERT INTO password_reset_tokens (user_id, token, expires_at) 
+       VALUES ($1, $2, $3)`,
+      [user.user_id, token, expires]
+    );
+
+    const resetLink = `http://localhost:5000/auth/reset-password/${token}`;
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"Support" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "Reset Your Password (Resend)",
+      html: `<p>Click this link to reset your password: <a href="${resetLink}">${resetLink}</a></p>`,
+    });
+
+    res.status(200).send("Email reset password telah dikirim ulang");
+  } catch (err) {
+    console.error("Error sending reset password email:", err.message);
+    res.status(500).send("Gagal mengirim ulang email reset password");
+  }
+};
