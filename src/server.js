@@ -19,8 +19,6 @@ fetchData();
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.listen(port, () => console.log(`Server running on port ${port}`));
-
 app.use(express.json());
 app.use(session({ secret: 'secret', resave: false, saveUninitialized: true }));
 app.use(passport.initialize());
@@ -28,10 +26,17 @@ app.use(passport.session());
 
 const authRoutes = require('./routes/authRoutes');
 app.use('/auth', authRoutes);
+
+const articleRoutes = require('./routes/generalRoutes');
+app.use('/', articleRoutes);
+
+app.get('/', (req, res) => {
+  res.send('Backend berjalan dengan sukses di Railway!');
+});
+
 app.get('/success', (req, res) => {
   const token = req.query.token;
   res.send(`Login SSO berhasil. Token kamu: ${token}`);
 });
 
-const articleRoutes = require('./routes/generalRoutes');
-app.use('/', articleRoutes);
+app.listen(port, () => console.log(`Server running on port ${port}`));
