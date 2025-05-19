@@ -1,19 +1,9 @@
 const pool = require("../config/db");
-const multer = require('multer');
 const path = require('path');
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/profile_pictures');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
 
 exports.getProfile = async (req, res) => {
   const { user_id } = req.params;
-  if (!user_id) return res.status(401).send("Id undefined");
+  if (!user_id) return res.status(400).send("Id undefined");
 
   try {
     const profileResult = await pool.query(
@@ -46,23 +36,23 @@ exports.getProfile = async (req, res) => {
 
 exports.editProfile = async (req, res) => {
   const { user_id } = req.params;
-  const { email, username, profile } = req.params;
-  if (!user_id) return res.status(401).send("Id undefined");
+  const { email, username, profile } = req.body;
+
+  if (!user_id) return res.status(400).send("Id undefined");
+
   try {
     await pool.query(
-      "UPDATE users SET email = $1, username = $2, WHERE id = $3",
-      [email, username, profile]
+      "UPDATE users SET email = $1, username = $2 WHERE user_id = $3",
+      [email, username, user_id]
     );
 
     await pool.query(
-      `UPDATE profile 
-             SET full_name = $1, bio = $2, address = $3 
-             WHERE user_id = $4`,
+      "UPDATE profile SET full_name = $1, bio = $2, address = $3 WHERE user_id = $4",
       [
         profile.full_name,
         profile.bio,
         profile.address,
-        user_id,
+        user_id
       ]
     );
 
@@ -75,10 +65,11 @@ exports.editProfile = async (req, res) => {
 
 exports.deleteProfile = async (req, res) => {
   const { user_id } = req.params;
-  if (!user_id) return res.status(401).send("Id undefined");
+  if (!user_id) return res.status(400).send("Id undefined");
+
   try {
-    await pool.query("DELETE FROM profile WHERE user_id = $1", [id]);
-    await pool.query("DELETE FROM users WHERE id = $1", [id]);
+    await pool.query("DELETE FROM profile WHERE user_id = $1", [user_id]);
+    await pool.query("DELETE FROM users WHERE user_id = $1", [user_id]);
 
     res.status(200).send("Profile deleted successfully");
   } catch (err) {
@@ -87,11 +78,13 @@ exports.deleteProfile = async (req, res) => {
   }
 };
 
-const upload = multer({ storage: storage });
-
 exports.uploadProfilePicture = async (req, res) => {
   try {
     const userId = req.body.user_id;
+    if (!req.file || !userId) {
+      return res.status(400).json({ message: 'File atau user_id tidak ada' });
+    }
+
     const filePath = `/uploads/profile_pictures/${req.file.filename}`;
 
     await pool.query(
