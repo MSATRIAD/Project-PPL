@@ -32,7 +32,7 @@ exports.register = async (req, res) => {
       },
     });
 
-    const verificationLink = `http://localhost:5000/auth/verify-email/${user.user_id}/${token}`;
+    const verificationLink = `https://project-ppl-production.up.railway.app/auth/verify-email/${user.user_id}/${token}`;
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
@@ -168,7 +168,7 @@ exports.forgotPassword = async (req, res) => {
       [user.user_id, token, expires]
     );
 
-    const resetLink = `http://localhost:5000/auth/reset-password/${token}`;
+    const resetLink = `https://project-ppl-production.up.railway.app/auth/reset-password/${token}`;
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -319,7 +319,7 @@ exports.resendEmail = async (req, res) => {
       },
     });
 
-    const verificationLink = `http://localhost:5000/auth/verify-email/${user.user_id}/${token}`;
+    const verificationLink = `https://project-ppl-production.up.railway.app/auth/verify-email/${user.user_id}/${token}`;
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
@@ -357,7 +357,7 @@ exports.resendForgotPasswordEmail = async (req, res) => {
       [user.user_id, token, expires]
     );
 
-    const resetLink = `http://localhost:5000/auth/reset-password/${token}`;
+    const resetLink = `https://project-ppl-production.up.railway.app/auth/reset-password/${token}`;
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
