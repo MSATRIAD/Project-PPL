@@ -1,7 +1,6 @@
 const multer = require('multer');
 const path = require('path');
 
-// Untuk upload gambar profil (disimpan di disk)
 const profileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploads/profile_pictures');
@@ -10,7 +9,6 @@ const profileStorage = multer.diskStorage({
     cb(null, Date.now() + path.extname(file.originalname));
   }
 });
-const uploadProfile = multer({ storage: profileStorage });
 
-// Untuk upload gambar prediksi (langsung ke memori)
+const uploadProfile = multer({ storage: profileStorage });
 const uploadPredict = multer({ storage: multer.memoryStorage() });

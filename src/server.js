@@ -28,7 +28,8 @@ const authRoutes = require('./routes/authRoutes');
 app.use('/auth', authRoutes);
 
 const articleRoutes = require('./routes/generalRoutes');
-app.use('/', articleRoutes);
+const verifyJWT = require('./middlewares/verifyJWT');
+app.use('/', verifyJWT, articleRoutes);
 
 app.get('/', (req, res) => {
   res.send('Backend berjalan dengan sukses di Railway!');
