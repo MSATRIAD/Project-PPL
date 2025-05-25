@@ -12,3 +12,8 @@ const profileStorage = multer.diskStorage({
 
 const uploadProfile = multer({ storage: profileStorage });
 const uploadPredict = multer({ storage: multer.memoryStorage() });
+
+module.exports = {
+  uploadProfile,
+  uploadPredict,
+};

@@ -12,11 +12,15 @@ exports.getRecyclePredict = async (req, res) => {
     const form = new FormData();
     form.append("file", file.buffer, file.originalname);
 
-    const modelResponse = await axios.post("routesModelDisini", form, {
-      headers: {
-        ...form.getHeaders(),
-      },
-    });
+    const modelResponse = await axios.post(
+      "https://becycle-model-production.up.railway.app/predict",
+      form,
+      {
+        headers: {
+          ...form.getHeaders(),
+        },
+      }
+    );
 
     const prediction = modelResponse.data.prediction;
     const image_url = modelResponse.data.file_url;

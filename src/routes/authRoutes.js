@@ -1,16 +1,25 @@
-const multer = require('multer');
-const path = require('path');
+const express = require("express");
+const passport = require("passport");
+const router = express.Router();
+const auth = require("../controllers/authController");
 
-// Untuk upload gambar profil (disimpan di disk)
-const profileStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/profile_pictures');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
-const uploadProfile = multer({ storage: profileStorage });
+router.post("/register", auth.register);
+router.post("/login", auth.login);
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["email", "profile"] })
+);
+router.get(
+  "/google/callback",
+  passport.authenticate("google", { failureRedirect: "/" }),
+  auth.googleCallback
+);
+router.get("/verify-email/:id/:token", auth.verifyEmail);
+router.post("/forgot-password", auth.forgotPassword);
+router.post("/reset-password/:token", auth.resetPassword);
+router.post("/refresh-token", auth.refreshToken);
+router.get("/reset-password/:token", auth.renderResetPasswordPage);
+router.post("resend-email", auth.resendEmail);
+router.post("resend-reset", auth.resendForgotPasswordEmail);
 
-// Untuk upload gambar prediksi (langsung ke memori)
-const uploadPredict = multer({ storage: multer.memoryStorage() });
+module.exports = router;
