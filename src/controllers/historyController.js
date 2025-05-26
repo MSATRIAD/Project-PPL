@@ -13,7 +13,7 @@ exports.getHistory = async (req, res) => {
         .status(404)
         .send("There's no history. Try analyze some images!");
     }
-    res.status(201).send(...userHistory);
+    res.status(201).send(userHistory.rows);
   } catch (err) {
     console.error(err);
     res.status(500).send("Server error");
@@ -21,7 +21,8 @@ exports.getHistory = async (req, res) => {
 };
 
 exports.getHistoryById = async (req, res) => {
-  const { user_id, scan_id } = req.body;
+  const user_id = req.user.user_id;
+  const scan_id = req.params;
   if ((!user_id, !scan_id)) return res.status(401).send("Id undefined");
   try {
     const historyId = await pool.query(
@@ -32,7 +33,7 @@ exports.getHistoryById = async (req, res) => {
     if (!historyId) {
       return res.status(404).send("History not found");
     }
-    res.status(201).send(historyId);
+    res.status(201).send(historyId.rows);
   } catch (err) {
     console.error(err);
     res.statu(500).send("Server error");
