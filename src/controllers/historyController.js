@@ -22,13 +22,13 @@ exports.getHistory = async (req, res) => {
 
 exports.getHistoryById = async (req, res) => {
   const user_id = req.user.user_id;
-  const scan_id = req.params;
-  if ((!user_id, !scan_id)) return res.status(401).send("Id undefined");
+  const history_id = req.params;
+  if ((!user_id, !history_id)) return res.status(401).send("Id undefined");
   try {
     const historyId = await pool.query(
-      "SELECT * FROM result_histroy WHERE user_id = $1 AND scan_id = $1",
+      "SELECT * FROM result_histroy WHERE user_id = $1 AND history_id = $1",
       [user_id],
-      [scan_id]
+      [history_id]
     );
     if (!historyId) {
       return res.status(404).send("History not found");
