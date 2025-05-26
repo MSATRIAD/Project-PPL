@@ -55,7 +55,7 @@ exports.editProfile = async (req, res) => {
         user_id
       ]
     );
-
+    
     res.status(200).send("Profile updated successfully");
   } catch (err) {
     console.error(err);
