@@ -22,8 +22,8 @@ exports.getRecyclePredict = async (req, res) => {
       }
     );
 
-    const prediction = modelResponse.data.prediction;
-    const image_url = modelResponse.data.file_url;
+    const prediction = modelResponse.data.label;
+    const image_url = modelResponse.data.image_url;
     const user_id = req.user.user_id;
 
     const todayStart = new Date();
@@ -42,13 +42,13 @@ exports.getRecyclePredict = async (req, res) => {
     const predictionCount = parseInt(countResult.rows[0].count);
 
     await pool.query(
-      `INSERT INTO prediction_logs (user_id, prediction_result, created_at) VALUES ($1, $2, $3)`,
+      INSERT INTO prediction_logs (user_id, prediction_result, created_at) VALUES ($1, $2, $3),
       [user_id, prediction, new Date()]
     );
 
     if (predictionCount < 5) {
       await pool.query(
-        `UPDATE users SET exp = exp + 10 WHERE user_id = $1`,
+        UPDATE users SET exp = exp + 10 WHERE user_id = $1,
         [user_id]
       );
     }
@@ -60,7 +60,7 @@ exports.getRecyclePredict = async (req, res) => {
     );
 
     const recyclingInfoQuery = await pool.query(
-      `SELECT * FROM recycle_info WHERE material_type = $1`,
+      SELECT * FROM recycle_info WHERE material_type = $1,
       [prediction]
     );
 
@@ -71,11 +71,8 @@ exports.getRecyclePredict = async (req, res) => {
     const info = recyclingInfoQuery.rows[0];
 
     return res.status(200).json({
-      prediction: prediction,
+      ...info,
       image_url: image_url,
-      recycling_info: {
-        possible_products: info.possible_products,
-      },
     });
 
   } catch (err) {

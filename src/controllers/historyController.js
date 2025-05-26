@@ -1,7 +1,7 @@
 const pool = require("../config/db");
 
 exports.getHistory = async (req, res) => {
-  const user_id = req.user_id;
+  const user_id = req.user.user_id;
   if (!user_id) return res.status(401).send("Id undefined");
   try {
     const userHistory = await pool.query(
