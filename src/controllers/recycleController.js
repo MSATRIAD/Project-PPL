@@ -42,13 +42,13 @@ exports.getRecyclePredict = async (req, res) => {
     const predictionCount = parseInt(countResult.rows[0].count);
 
     await pool.query(
-      INSERT INTO prediction_logs (user_id, prediction_result, created_at) VALUES ($1, $2, $3),
+      `INSERT INTO prediction_logs (user_id, prediction_result, created_at) VALUES ($1, $2, $3)`,
       [user_id, prediction, new Date()]
     );
 
     if (predictionCount < 5) {
       await pool.query(
-        UPDATE users SET exp = exp + 10 WHERE user_id = $1,
+        `UPDATE users SET exp = exp + 10 WHERE user_id = $1`,
         [user_id]
       );
     }
@@ -60,7 +60,7 @@ exports.getRecyclePredict = async (req, res) => {
     );
 
     const recyclingInfoQuery = await pool.query(
-      SELECT * FROM recycle_info WHERE material_type = $1,
+      `SELECT * FROM recycle_info WHERE material_type = $1`,
       [prediction]
     );
 
