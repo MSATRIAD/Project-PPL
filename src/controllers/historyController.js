@@ -26,7 +26,7 @@ exports.getHistoryById = async (req, res) => {
   if ((!user_id, !history_id)) return res.status(401).send("Id undefined");
   try {
     const historyResult = await pool.query(
-      "SELECT * FROM result_histroy WHERE user_id = $1 AND history_id = $2",
+      "SELECT * FROM result_history WHERE user_id = $1 AND history_id = $2",
       [user_id],
       [history_id]
     );
