@@ -4,6 +4,7 @@ const pool = require("../config/db");
 
 exports.getRecyclePredict = async (req, res) => {
   try {
+    // Predict by Model
     const file = req.file;
     if (!file) {
       return res.status(400).send("File is required");
@@ -26,6 +27,8 @@ exports.getRecyclePredict = async (req, res) => {
     const image_url = modelResponse.data.image_url;
     const user_id = req.user.user_id;
 
+
+    // EXP System
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const todayEnd = new Date();
@@ -53,22 +56,24 @@ exports.getRecyclePredict = async (req, res) => {
       );
     }
 
-    await pool.query(
-      `INSERT INTO result_history (image_url, prediction_result, user_id)
-       VALUES ($1, $2, $3)`,
-      [image_url, prediction, user_id]
-    );
-
+    // Ambil data table Recycle Info
     const recyclingInfoQuery = await pool.query(
       `SELECT * FROM recycle_info WHERE material_type = $1`,
       [prediction]
     );
-
+    
     if (recyclingInfoQuery.rows.length === 0) {
       return res.status(404).send("Tidak ada informasi daur ulang untuk hasil prediksi ini");
     }
 
     const info = recyclingInfoQuery.rows[0];
+    
+    // Save to History Table
+    await pool.query(
+      `INSERT INTO result_history (image_url, prediction_result, user_id recycle_id)
+       VALUES ($1, $2, $3, $4)`,
+      [image_url, prediction, user_id, info.recycle_id]
+    );
 
     return res.status(200).json({
       ...info,
