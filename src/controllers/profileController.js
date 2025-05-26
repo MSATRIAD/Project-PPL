@@ -1,7 +1,6 @@
 const pool = require("../config/db");
 const path = require('path');
 const cloudinary = require("cloudinary").v2;
-const streamifier = require("streamifier");
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -93,28 +92,24 @@ exports.uploadProfilePicture = async (req, res) => {
       return res.status(400).json({ message: 'File atau user_id tidak ada' });
     }
 
-    const uploadStream = cloudinary.uploader.upload_stream(
+    const filePath = path.resolve(req.file.path);
+
+    const result = await cloudinary.uploader.upload(filePath,
       {
         folder: 'profile_pictures',
-        public_id: `user_${user_id}`,
+        public_id: `user_${userId}`,
         overwrite: true,
-      },
-      async (error, result) => {
-        if (error) {
-          console.error("Upload ke Cloudinary gagal:", error);
-          return res.status(500).json({ message: "Upload ke Cloudinary gagal" });
-        }
-
-        await pool.query(
-          `UPDATE users SET profile_picture = $1 WHERE user_id = $2`,
-          [result.secure_url, userId]
-        );
-
-        res.json({ message: "Upload sukses", imageUrl: result.secure_url });
       }
-    )
+    );
 
-    streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+    const imageUrl = result.secure_url;
+
+    await pool.query(
+      "UPDATE users SET profile_picture = $1 WHERE user_id = $2",
+      [imageUrl, userId]
+    );
+
+    res.json({ message: "Upload sukses", imageUrl: imageUrl });
   } catch (err) {
     console.error('Error saat upload:', err);
     res.status(500).json({ message: 'Gagal upload gambar' });
