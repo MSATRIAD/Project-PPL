@@ -27,7 +27,6 @@ exports.getRecyclePredict = async (req, res) => {
     const image_url = modelResponse.data.image_url;
     const user_id = req.user.user_id;
 
-
     // EXP System
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
