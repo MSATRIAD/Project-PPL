@@ -98,3 +98,61 @@ exports.uploadProfilePicture = async (req, res) => {
     res.status(500).json({ message: 'Gagal upload gambar' });
   }
 };
+
+exports.redeemReward = async (req, res) => {
+  const userId = req.user.id;
+  const { reward_id } = req.body;
+
+  try {
+    await db.query('BEGIN');
+
+    const reward = await db.query('SELECT * FROM rewards WHERE id = $1', [reward_id]);
+    if (reward.rows.length === 0) {
+      await db.query('ROLLBACK');
+      return res.status(404).json({ message: 'Reward not found.' });
+    }
+    const rewardData = reward.rows[0];
+
+    const user = await db.query('SELECT points FROM users WHERE id = $1', [userId]);
+    const userPoints = user.rows[0].points;
+
+    if (userPoints < rewardData.points_required) {
+      await db.query('ROLLBACK');
+      return res.status(400).json({ message: 'Insufficient points.' });
+    }
+
+    await db.query('UPDATE users SET points = points - $1 WHERE id = $2', [
+      rewardData.points_required,
+      userId
+    ]);
+
+    await db.query(
+      'INSERT INTO reward_redemptions(user_id, reward_id, redeemed_at) VALUES($1, $2, NOW())',
+      [userId, reward_id]
+    );
+
+    await db.query('COMMIT');
+
+    const updated = await db.query('SELECT points FROM users WHERE id = $1', [userId]);
+
+    const allRewards = await db.query('SELECT id, name, image_url, points_required FROM rewards ORDER BY points_required ASC');
+
+    res.json({
+      success: true,
+      message: 'Reward redeemed successfully.',
+      remainingPoints: updated.rows[0].points,
+      redeemedReward: {
+        id: rewardData.id,
+        name: rewardData.name,
+        image: rewardData.image_url,
+        cost: rewardData.points_required
+      },
+      rewards: allRewards.rows
+    });
+
+  } catch (err) {
+    await db.query('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
