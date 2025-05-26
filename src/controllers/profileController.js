@@ -100,7 +100,7 @@ exports.uploadProfilePicture = async (req, res) => {
 };
 
 exports.redeemReward = async (req, res) => {
-  const userId = req.user_id;
+  const userId = req.user.user_id;
   const { reward_id } = req.body;
 
   try {

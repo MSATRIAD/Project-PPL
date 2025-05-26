@@ -13,7 +13,7 @@ exports.getHistory = async (req, res) => {
         .status(404)
         .send("There's no history. Try analyze some images!");
     }
-    res.status(201).send(userHistory);
+    res.status(201).send(...userHistory);
   } catch (err) {
     console.error(err);
     res.status(500).send("Server error");
