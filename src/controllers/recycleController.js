@@ -42,8 +42,8 @@ exports.getRecyclePredict = async (req, res) => {
     const predictionCount = parseInt(countResult.rows[0].count);
 
     await pool.query(
-      `INSERT INTO prediction_logs (user_id, prediction_result) VALUES ($1, $2)`,
-      [user_id, prediction]
+      `INSERT INTO prediction_logs (user_id, prediction_result, created_at) VALUES ($1, $2, $3)`,
+      [user_id, prediction, new Date()]
     );
 
     if (predictionCount < 5) {
