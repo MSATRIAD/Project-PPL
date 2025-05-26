@@ -1,6 +1,7 @@
 const pool = require("../config/db");
 const path = require('path');
 const cloudinary = require("cloudinary").v2;
+const streamifier = require("streamifier");
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -22,17 +23,19 @@ exports.getProfile = async (req, res) => {
       return res.status(404).send("Profile not found");
     }
 
-    const expResult = await pool.query(
-      "SELECT exp FROM users WHERE user_id = $1",
+    const user = await pool.query(
+      "SELECT exp, profile_picture FROM users WHERE user_id = $1",
       [user_id]
     );
 
     const profile = profileResult.rows[0];
-    const exp = expResult.rows[0]?.exp || 0;
+    const exp = user.rows[0]?.exp || 0;
+    const profile_picture = user.rows[0]?.profile_picture || null;
 
     res.status(200).json({
       ...profile,
       exp,
+      profile_picture,
     });
 
   } catch (err) {
@@ -89,30 +92,40 @@ exports.uploadProfilePicture = async (req, res) => {
   try {
     const userId = req.user.user_id;
     if (!req.file || !userId) {
-      return res.status(400).json({ message: 'File atau user_id tidak ada' });
+      return res.status(400).json({ message: "File atau user_id tidak ada" });
     }
 
-    const filePath = path.resolve(req.file.path);
+    const streamUpload = (fileBuffer) => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "profile_pictures",
+            public_id: `user_${userId}`,
+            overwrite: true,
+          },
+          (error, result) => {
+            if (result) {
+              resolve(result);
+            } else {
+              reject(error);
+            }
+          }
+        );
+        streamifier.createReadStream(fileBuffer).pipe(stream);
+      });
+    };
 
-    const result = await cloudinary.uploader.upload(filePath,
-      {
-        folder: 'profile_pictures',
-        public_id: `user_${userId}`,
-        overwrite: true,
-      }
-    );
-
-    const imageUrl = result.secure_url;
+    const result = await streamUpload(req.file.buffer);
 
     await pool.query(
       "UPDATE users SET profile_picture = $1 WHERE user_id = $2",
-      [imageUrl, userId]
+      [result.secure_url, userId]
     );
 
-    res.json({ message: "Upload sukses", imageUrl: imageUrl });
+    res.json({ message: "Upload sukses", imageUrl: result.secure_url });
   } catch (err) {
-    console.error('Error saat upload:', err);
-    res.status(500).json({ message: 'Gagal upload gambar' });
+    console.error("Error saat upload:", err);
+    res.status(500).json({ message: "Gagal upload gambar" });
   }
 };
 
