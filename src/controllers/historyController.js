@@ -33,7 +33,7 @@ exports.getHistoryById = async (req, res) => {
     if (!historyResult.rows.length === 0) {
       return res.status(404).send("History not found");
     }
-    res.status(201).send(historyResult.rows);
+    res.status(201).send(historyResult.rows[0]);
   } catch (err) {
     console.error(err);
     res.statu(500).send("Server error");
