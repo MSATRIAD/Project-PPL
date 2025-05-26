@@ -13,11 +13,15 @@ exports.register = async (req, res) => {
       'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *',
       [username, email, hashed]
     );
-
     const user = userResult.rows[0];
 
+    await pool.query(
+      'INSERT INTO profile (user_id, full_name, bio, address) VALUES ($1, $2, $3, $4)',
+      [user.user_id, '', '', '']
+    );
+
     const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 60); 
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60); // 1 jam
 
     await pool.query(
       'INSERT INTO verification_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
@@ -47,6 +51,7 @@ exports.register = async (req, res) => {
     res.status(500).send('Registration failed');
   }
 };
+
 
 exports.login = async (req, res) => {
   try {
