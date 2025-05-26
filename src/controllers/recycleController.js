@@ -70,7 +70,7 @@ exports.getRecyclePredict = async (req, res) => {
     
     // Save to History Table
     await pool.query(
-      `INSERT INTO result_history (image_url, prediction_result, user_id recycle_id)
+      `INSERT INTO result_history (image_url, prediction_result, user_id, recycle_id)
        VALUES ($1, $2, $3, $4)`,
       [image_url, prediction, user_id, info.recycle_id]
     );
