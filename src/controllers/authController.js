@@ -173,7 +173,7 @@ exports.forgotPassword = async (req, res) => {
       [user.user_id, token, expires]
     );
 
-    const resetLink = `https://project-ppl-production.up.railway.app/auth/reset-password/${token}`;
+    const resetLink = `becycle-reset-password.netlify.app/auth/reset-password/${token}`;
 
     const transporter = nodemailer.createTransport({
       service: "gmail",

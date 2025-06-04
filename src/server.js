@@ -3,12 +3,13 @@ const express = require('express');
 const passport = require('passport');
 const pool = require('./config/db');
 const session = require('express-session');
+const cors = require('cors');
 require('./config/passport');
 
 async function fetchData() {
   try {
     const result = await pool.query('SELECT NOW()');
-    console.log(result.rows);
+    console.log("Database time:", result.rows[0].now);
   } catch (error) {
     console.error('Query Error:', error);
   }
@@ -19,7 +20,28 @@ fetchData();
 const app = express();
 const port = process.env.PORT || 5000;
 
+const whitelist = [
+  "becycle-reset-password.netlify.app"
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || whitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"], 
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(session({ secret: 'secret', resave: false, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
