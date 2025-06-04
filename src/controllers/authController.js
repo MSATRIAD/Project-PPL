@@ -160,12 +160,14 @@ exports.verifyEmail = async (req, res) => {
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const result = await pool.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
     const user = result.rows[0];
     if (!user) return res.status(404).send("User not found");
 
     const token = crypto.randomBytes(32).toString("hex");
-    const expires = new Date(Date.now() + 3600000); 
+    const expires = new Date(Date.now() + 3600000);
 
     await pool.query(
       `INSERT INTO password_reset_tokens (user_id, token, expires_at) 
@@ -173,7 +175,9 @@ exports.forgotPassword = async (req, res) => {
       [user.user_id, token, expires]
     );
 
-    const resetLink = `becycle-reset-password.netlify.app/auth/reset-password/${token}`;
+    const netlifyAppBaseUrl = "https://becycle-reset-password.netlify.app"; 
+    const resetPagePath = "/reset-password";
+    const resetLink = `<span class="math-inline">\{netlifyAppBaseUrl\}</span>{resetPagePath}?token=${token}`;
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
