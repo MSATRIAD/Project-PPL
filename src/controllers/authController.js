@@ -175,9 +175,11 @@ exports.forgotPassword = async (req, res) => {
       [user.user_id, token, expires]
     );
 
-    const netlifyAppBaseUrl = "https://becycle-reset-password.netlify.app"; 
+    const netlifyAppBaseUrl = "https://becycle-reset-password.netlify.app";
     const resetPagePath = "/reset-password";
-    const resetLink = `<span class="math-inline">\{netlifyAppBaseUrl\}</span>{resetPagePath}?token=${token}`;
+
+    const resetLink = `${netlifyAppBaseUrl}${resetPagePath}?token=${token}`;
+
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -188,16 +190,26 @@ exports.forgotPassword = async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: `"Support" <${process.env.EMAIL_USER}>`,
+      from: `"Becycle Support" <${process.env.EMAIL_USER}>`,
       to: user.email,
-      subject: "Password Reset",
-      html: `<p>Click this link to reset your password: <a href="${resetLink}">${resetLink}</a></p>`,
+      subject: "Link Reset Password Akun Becycle Anda",
+      html: `<p>Halo ${user.username || user.email},</p>
+             <p>Anda meminta untuk mereset password akun Anda.</p>
+             <p>Silakan klik link berikut untuk melanjutkan proses reset password:</p>
+             <p><a href="${resetLink}">Reset Password Saya</a></p>
+             <p>Link ini akan kedaluwarsa dalam 1 jam.</p>
+             <p>Jika Anda tidak meminta reset password, abaikan email ini.</p>
+             <p>Terima kasih,</p>
+             <p>Tim Becycle</p>`,
     });
 
-    res.send("Password reset email sent");
+    res.send("Password reset email sent. Silakan periksa inbox Anda.");
   } catch (err) {
-    console.error('Error sending reset email:', err.message);
-    res.status(500).send('Error sending reset email: ' + err.message);
+    console.error("Error sending reset email:", err.message);
+    console.error(err.stack); // Tambahkan ini untuk detail error lebih lengkap di log server
+    res
+      .status(500)
+      .send("Gagal mengirim email reset password. Silakan coba lagi nanti.");
   }
 };
 
