@@ -21,7 +21,8 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 const whitelist = [
-  "becycle-reset-password.netlify.app"
+  "https://becycle-reset-password.netlify.app",
+  "http://localhost:3000",
 ];
 
 const corsOptions = {
