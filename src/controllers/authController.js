@@ -224,14 +224,14 @@ exports.resetPassword = async (req, res) => {
       [token]
     );
     const tokenData = result.rows[0];
-    if (!tokenData) return res.status(400).json("Invalid or expired token");
+    if (!tokenData) return res.status(400).json({ message: "Invalid or expired token"});
 
     const userResult = await pool.query(
       `SELECT * FROM users WHERE user_id = $1`,
       [tokenData.user_id]
     );
     const user = userResult.rows[0];
-    if (!user) return res.status(404).json("User not found");
+    if (!user) return res.status(404).json({ message: "User not found"});
 
     const hashed = await bcrypt.hash(password, 10);
 
@@ -248,7 +248,7 @@ exports.resetPassword = async (req, res) => {
     res.status(200).json({ message: "Password telah berhasil direset!" });
   } catch (err) {
     console.error(err);
-    res.status(500).json("Error resetting password");
+    res.status(500).json({ message: "Error resetting password" });
   }
 };
 
