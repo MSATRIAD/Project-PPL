@@ -206,7 +206,7 @@ exports.forgotPassword = async (req, res) => {
     res.send("Password reset email sent. Silakan periksa inbox Anda.");
   } catch (err) {
     console.error("Error sending reset email:", err.message);
-    console.error(err.stack); // Tambahkan ini untuk detail error lebih lengkap di log server
+    console.error(err.stack);
     res
       .status(500)
       .send("Gagal mengirim email reset password. Silakan coba lagi nanti.");
