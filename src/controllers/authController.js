@@ -40,7 +40,7 @@ exports.register = async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: `"Becycle Support" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Verifikasi Email Akun Becycle Anda",
       html: `<p>Halo <span class="math-inline">\{username\},</p\>
