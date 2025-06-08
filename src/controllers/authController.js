@@ -28,6 +28,9 @@ exports.register = async (req, res) => {
       [user.user_id, token, expiresAt]
     );
 
+    const verificationPageUrl = "https://becycle-reset-password.netlify.app/verify-email";
+    const verificationLink = `<span class="math-inline">\{verificationPageUrl\}?id\=</span>{user.user_id}&token=${token}`;
+
     const transporter = nodemailer.createTransport({
       service: 'Gmail',
       auth: {
@@ -36,13 +39,15 @@ exports.register = async (req, res) => {
       },
     });
 
-    const verificationLink = `https://project-ppl-production.up.railway.app/auth/verify-email/${user.user_id}/${token}`;
-
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Verify your email',
-      html: `<p>Click this link to verify your email: <a href="${verificationLink}">${verificationLink}</a></p>`,
+      subject: "Verifikasi Email Akun Becycle Anda",
+      html: `<p>Halo <span class="math-inline">\{username\},</p\>
+             <p>Terima kasih sudah mendaftar. Silakan klik link di bawah ini untuk memverifikasi alamat email Anda:</p>
+             <p><a href="{verificationLink}">Verifikasi Email Saya</a></p>
+             <p>Link ini akan kedaluwarsa dalam 1 jam.</p>
+             <p>Tim Becycle</p>`,
     });
 
     res.status(201).send('Registered! Please check your email to verify your account.');
@@ -133,7 +138,11 @@ exports.googleCallback = async (req, res) => {
 
 exports.verifyEmail = async (req, res) => {
   try {
-    const { id, token } = req.params;
+    const { id, token } = req.body;
+
+    if (!id || !token) {
+      return res.status(400).json({ message: "Informasi verifikasi tidak lengkap." });
+    }
 
     const result = await pool.query(
       'SELECT * FROM verification_tokens WHERE user_id = $1 AND token = $2 AND expires_at > NOW()',
@@ -141,7 +150,9 @@ exports.verifyEmail = async (req, res) => {
     );
 
     const tokenData = result.rows[0];
-    if (!tokenData) return res.status(400).send('Invalid or expired token.');
+    if (!tokenData) {
+      return res.status(400).json({ message: "Link verifikasi tidak valid atau sudah kedaluwarsa." });
+    }
 
     await pool.query(
       'UPDATE users SET is_verified = TRUE WHERE user_id = $1',
@@ -150,10 +161,10 @@ exports.verifyEmail = async (req, res) => {
 
     await pool.query('DELETE FROM verification_tokens WHERE user_id = $1', [id]);
 
-    res.send('Email verified successfully. You can now login.');
+    res.status(200).json({ message: "Email berhasil diverifikasi! Anda sekarang bisa login di aplikasi." });
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Verification failed');
+    console.error('Email verification error:', err);
+    res.status(500).json({ message: "Terjadi kesalahan internal saat verifikasi email." });
   }
 };
 
