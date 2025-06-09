@@ -28,10 +28,10 @@ exports.register = async (req, res) => {
       [user.user_id, token, expiresAt]
     );
 
-    const verificationPageUrl = "https://becycle-reset-password.netlify.app";
+    const verificationPageUrl = "https://becycle-web.netlify.app";
     const verificationPagePath = "/verify-email";
 
-    const verificationLink = `${verificationPageUrl}${verificationPagePath}?token=${token}`
+    const verificationLink = `${verificationPageUrl}${verificationPagePath}?id${user.user_id}&token=${token}`
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -142,7 +142,7 @@ exports.googleCallback = async (req, res) => {
 
 exports.verifyEmail = async (req, res) => {
   try {
-    const { id, token } = req.body;
+    const { id, token } = req.query;
 
     if (!id || !token) {
       return res.status(400).json({ message: "Informasi verifikasi tidak lengkap." });
@@ -190,7 +190,7 @@ exports.forgotPassword = async (req, res) => {
       [user.user_id, token, expires]
     );
 
-    const netlifyAppBaseUrl = "https://becycle-reset-password.netlify.app";
+    const netlifyAppBaseUrl = "https://becycle-web.netlify.app";
     const resetPagePath = "/reset-password";
 
     const resetLink = `${netlifyAppBaseUrl}${resetPagePath}?token=${token}`
