@@ -28,11 +28,13 @@ exports.register = async (req, res) => {
       [user.user_id, token, expiresAt]
     );
 
-    const verificationPageUrl = "https://becycle-reset-password.netlify.app/verify-email";
-    const verificationLink = `<span class="math-inline">\{verificationPageUrl\}?id\=</span>{user.user_id}&token=${token}`;
+    const verificationPageUrl = "https://becycle-reset-password.netlify.app";
+    const verificationPagePath = "verify-email";
+
+    const verificationLink = `${verificationPageUrl}${verificationPagePath}?token=${token}`
 
     const transporter = nodemailer.createTransport({
-      service: 'Gmail',
+      service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -43,10 +45,12 @@ exports.register = async (req, res) => {
       from: `"Becycle Support" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Verifikasi Email Akun Becycle Anda",
-      html: `<p>Halo <span class="math-inline">\{username\},</p\>
+      html: `<p>Halo ${user.username || user.email},</p>
              <p>Terima kasih sudah mendaftar. Silakan klik link di bawah ini untuk memverifikasi alamat email Anda:</p>
-             <p><a href="{verificationLink}">Verifikasi Email Saya</a></p>
+             <p><a href="${verificationLink}">Verifikasi Email Saya</a></p>
              <p>Link ini akan kedaluwarsa dalam 1 jam.</p>
+             <p>Jika Anda tidak meminta reset password, abaikan email ini.</p>
+             <p>Terima kasih,</p>
              <p>Tim Becycle</p>`,
     });
 
@@ -189,8 +193,7 @@ exports.forgotPassword = async (req, res) => {
     const netlifyAppBaseUrl = "https://becycle-reset-password.netlify.app";
     const resetPagePath = "/reset-password";
 
-    const resetLink = `${netlifyAppBaseUrl}${resetPagePath}?token=${token}`;
-
+    const resetLink = `${netlifyAppBaseUrl}${resetPagePath}?token=${token}`
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
