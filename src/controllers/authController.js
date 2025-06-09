@@ -29,7 +29,7 @@ exports.register = async (req, res) => {
     );
 
     const verificationPageUrl = "https://becycle-reset-password.netlify.app";
-    const verificationPagePath = "verify-email";
+    const verificationPagePath = "/verify-email";
 
     const verificationLink = `${verificationPageUrl}${verificationPagePath}?token=${token}`
 
