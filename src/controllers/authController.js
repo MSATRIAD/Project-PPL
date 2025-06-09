@@ -31,7 +31,7 @@ exports.register = async (req, res) => {
     const verificationPageUrl = "https://becycle-web.netlify.app";
     const verificationPagePath = "/verify-email";
 
-    const verificationLink = `${verificationPageUrl}${verificationPagePath}?id${user.user_id}&token=${token}`
+    const verificationLink = `${verificationPageUrl}${verificationPagePath}?id=${user.user_id}&token=${token}`
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
