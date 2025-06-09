@@ -14,7 +14,7 @@ router.get(
   passport.authenticate("google", { failureRedirect: "/" }),
   auth.googleCallback
 );
-router.post("/verify-email", auth.verifyEmail);
+router.get("/verify-email", auth.verifyEmail);
 router.post("/forgot-password", auth.forgotPassword);
 router.post("/reset-password/:token", auth.resetPassword);
 router.post("/refresh-token", auth.refreshToken);
