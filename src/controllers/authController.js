@@ -49,7 +49,7 @@ exports.register = async (req, res) => {
              <p>Terima kasih sudah mendaftar. Silakan klik link di bawah ini untuk memverifikasi alamat email Anda:</p>
              <p><a href="${verificationLink}">Verifikasi Email Saya</a></p>
              <p>Link ini akan kedaluwarsa dalam 1 jam.</p>
-             <p>Jika Anda tidak meminta reset password, abaikan email ini.</p>
+             <p>Jika Anda tidak melakukan registrasi akun, abaikan email ini.</p>
              <p>Terima kasih,</p>
              <p>Tim Becycle</p>`,
     });
