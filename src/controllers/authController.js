@@ -100,7 +100,9 @@ exports.login = async (req, res) => {
     res.json({ accessToken, refreshToken });
   } catch (err) {
     console.error(err);
-    res.status(500).send('Login failed');
+    res.status(500).json({
+      message: "Login failed.",
+    });
   }
 };
 
@@ -227,7 +229,7 @@ exports.forgotPassword = async (req, res) => {
     console.error(err.stack);
     res
       .status(500)
-      .send("Gagal mengirim email reset password. Silakan coba lagi nanti.");
+      .json("Gagal mengirim email reset password. Silakan coba lagi nanti.");
   }
 };
 
