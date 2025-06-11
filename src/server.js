@@ -50,10 +50,6 @@ app.use(passport.session());
 const authRoutes = require('./routes/authRoutes');
 app.use('/auth', authRoutes);
 
-const articleRoutes = require('./routes/generalRoutes');
-const verifyJWT = require('./middlewares/verifyJWT');
-app.use('/', verifyJWT, articleRoutes);
-
 app.get('/', (req, res) => {
   res.send('Backend berjalan dengan sukses di Railway!');
 });
@@ -62,5 +58,9 @@ app.get('/success', (req, res) => {
   const token = req.query.token;
   res.send(`Login SSO berhasil. Token kamu: ${token}`);
 });
+
+const articleRoutes = require('./routes/generalRoutes');
+const verifyJWT = require('./middlewares/verifyJWT');
+app.use('/', verifyJWT, articleRoutes);
 
 app.listen(port, () => console.log(`Server running on port ${port}`));
