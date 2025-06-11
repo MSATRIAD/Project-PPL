@@ -219,7 +219,9 @@ exports.forgotPassword = async (req, res) => {
              <p>Tim Becycle</p>`,
     });
 
-    res.send("Password reset email sent. Silakan periksa inbox Anda.");
+    res.status(200).json({
+      message: "Password reset email sent. Silakan periksa inbox Anda.",
+    });
   } catch (err) {
     console.error("Error sending reset email:", err.message);
     console.error(err.stack);
