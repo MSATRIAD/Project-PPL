@@ -132,7 +132,9 @@ exports.googleCallback = async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    res.redirect(`/success?token=${token}`);
+    res.redirect(
+      `https://becycle-web.netlify.app/auth/callback?token=${token}`
+    );
   } catch (err) {
     console.error('Error in Google callback:', err.message);
     res.status(500).send('Google login failed: ' + err.message);
