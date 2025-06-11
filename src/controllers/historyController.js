@@ -47,13 +47,13 @@ exports.getHistoryById = async (req, res) => {
 
 exports.uploadPredictionResult = async (req, res) => {
   try {
-    const { image_url, prediction_result } = req.body;
+    const { prediction_result } = req.body;
     const user_id = req.user.user_id;
 
     if (!image_url || !prediction_result) {
       return res
         .status(400)
-        .json({ message: "image_url dan prediction_result wajib diisi." });
+        .json({ message: "prediction_result wajib diisi." });
     }
 
     // Ambil recycle_id berdasarkan prediction_result
@@ -74,9 +74,9 @@ exports.uploadPredictionResult = async (req, res) => {
 
     // Simpan ke tabel history
     await pool.query(
-      `INSERT INTO result_history (image_url, prediction_result, user_id, recycle_id)
-       VALUES ($1, $2, $3, $4)`,
-      [image_url, prediction_result, user_id, info.recycle_id]
+      `INSERT INTO result_history (prediction_result, user_id, recycle_id)
+       VALUES ($1, $2, $3)`,
+      [prediction_result, user_id, info.recycle_id]
     );
 
     return res.status(201).json({
