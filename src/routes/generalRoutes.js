@@ -10,6 +10,7 @@ const recycleController = require('../controllers/recycleController');
 router.get('/articles', articleController.getArticles);
 router.get('/history', historyController.getHistory);
 router.get('/history/:history_id', historyController.getHistoryById);
+router.post('/upload', historyController.uploadPredictionResult);
 router.get('/users/:user_id', profileController.getProfile);
 router.post('/redeem', profileController.redeemReward);
 router.put('/users/edit/:user_id', profileController.editProfile);

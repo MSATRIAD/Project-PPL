@@ -44,3 +44,49 @@ exports.getHistoryById = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
+
+exports.uploadPredictionResult = async (req, res) => {
+  try {
+    const { image_url, prediction_result } = req.body;
+    const user_id = req.user.user_id;
+
+    if (!image_url || !prediction_result) {
+      return res
+        .status(400)
+        .json({ message: "image_url dan prediction_result wajib diisi." });
+    }
+
+    // Ambil recycle_id berdasarkan prediction_result
+    const recyclingInfoQuery = await pool.query(
+      `SELECT * FROM recycle_info WHERE material_type = $1`,
+      [prediction_result]
+    );
+
+    if (recyclingInfoQuery.rows.length === 0) {
+      return res
+        .status(404)
+        .json({
+          message: "Tidak ada informasi daur ulang untuk hasil prediksi ini.",
+        });
+    }
+
+    const info = recyclingInfoQuery.rows[0];
+
+    // Simpan ke tabel history
+    await pool.query(
+      `INSERT INTO result_history (image_url, prediction_result, user_id, recycle_id)
+       VALUES ($1, $2, $3, $4)`,
+      [image_url, prediction_result, user_id, info.recycle_id]
+    );
+
+    return res.status(201).json({
+      message: "Data hasil prediksi berhasil disimpan ke history.",
+      image_url,
+      prediction_result,
+      recycle_info: info,
+    });
+  } catch (err) {
+    console.error("Error in uploadPredictionResult:", err.message);
+    return res.status(500).json({ message: "Terjadi kesalahan pada server." });
+  }
+}
