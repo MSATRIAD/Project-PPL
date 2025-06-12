@@ -6,10 +6,10 @@ let lastFetched = 0;
 const CACHE_DURATION = 3 * 60 * 60 * 1000; 
 
 const fetchArticles = async () => {
-  const query = 'sampah OR limbah OR plastik OR "daur ulang" OR mengelola';
+  const titleQuery = '"daur ulang" OR sampah OR limbah OR plastik'; 
   const trustedDomains = 'mongabay.co.id,nationalgeographic.grid.id,kompas.com,tempo.co,detik.com';
   const response = await newsapi.v2.everything({
-    q: query,
+    qInTitle: titleQuery,
     domains: trustedDomains,
     language: 'id',
     sortBy: 'publishedAt',
