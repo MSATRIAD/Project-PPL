@@ -145,7 +145,7 @@ exports.googleCallback = async (req, res) => {
       );
       user = insert.rows[0];
 
-      await client.query(
+      await pool.query(
         "INSERT INTO profile (user_id, full_name, bio, address) VALUES ($1, $2, $3, $4)",
         [user.user_id, "", "", ""]
       );
