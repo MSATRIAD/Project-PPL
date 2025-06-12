@@ -2,7 +2,7 @@ const pool = require("../config/db");
 
 exports.getHistory = async (req, res) => {
   const user_id = req.user.user_id;
-  if (!user_id) return res.status(401).send("Id undefined");
+  if (!user_id) return res.status(401).json({message: "Id undefined"});
   try {
     const userHistory = await pool.query(
       "SELECT * FROM result_history WHERE user_id = $1",
@@ -11,12 +11,12 @@ exports.getHistory = async (req, res) => {
     if (!userHistory || userHistory.length === 0) {
       return res
         .status(404)
-        .send("There's no history. Try analyze some images!");
+        .json({message : "There's no history. Try analyze some images!"});
     }
-    res.status(201).send(userHistory.rows);
+    res.status(200).json(userHistory.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).send("Server error");
+    res.status(500).json({message : "Server error"});
   }
 };
 
@@ -25,7 +25,7 @@ exports.getHistoryById = async (req, res) => {
   const history_id = req.params.history_id;
 
   if (!user_id || !history_id) {
-    return res.status(401).send("Id undefined");
+    return res.status(401).json({ message: "Id undefined" });
   }
 
   try {
@@ -35,13 +35,13 @@ exports.getHistoryById = async (req, res) => {
     );
 
     if (historyResult.rows.length === 0) {
-      return res.status(404).send("History not found");
+      return res.status(404).json({message: "History not found"});
     }
 
     res.status(200).json(historyResult.rows[0]); // atau .rows jika ingin array
   } catch (err) {
     console.error(err);
-    res.status(500).send("Server error");
+    res.status(500).json({message: "Server error"});
   }
 };
 
