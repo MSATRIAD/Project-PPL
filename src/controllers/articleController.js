@@ -6,8 +6,11 @@ let lastFetched = 0;
 const CACHE_DURATION = 3 * 60 * 60 * 1000; 
 
 const fetchArticles = async () => {
+  const query = '(sampah OR limbah OR plastik) AND ("daur ulang" OR lingkungan OR berkelanjutan OR "ekonomi sirkular" OR mengelola)';
+  const trustedDomains = 'mongabay.co.id,nationalgeographic.grid.id,kompas.com,tempo.co,detik.com';
   const response = await newsapi.v2.everything({
-    q: 'sampah',
+    q: query,
+    domains: trustedDomains,
     language: 'id',
     sortBy: 'publishedAt',
     pageSize: 15,
@@ -18,7 +21,8 @@ const fetchArticles = async () => {
 
 exports.getArticles = async (req, res) => {
   const now = Date.now();
-  if (!cachedArticles.length || now - lastFetched > CACHE_DURATION) {
+  const isRefreshRequest = req.query.refresh === "true";
+  if (isRefreshRequest || !cachedArticles.length || now - lastFetched > CACHE_DURATION) {
     try {
       cachedArticles = await fetchArticles();
       lastFetched = now;
