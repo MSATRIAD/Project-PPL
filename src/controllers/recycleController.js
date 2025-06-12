@@ -53,6 +53,10 @@ exports.getRecyclePredict = async (req, res) => {
         `UPDATE users SET exp = exp + 10 WHERE user_id = $1`,
         [user_id]
       );
+      await pool.query(
+        `UPDATE users SET exp = exp + 10, points = points + 5 WHERE user_id = $1`,
+        [user_id]
+      );
     }
 
     // Ambil data table Recycle Info
