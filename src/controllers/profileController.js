@@ -174,3 +174,33 @@ exports.getAllRewards = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.getMyRedeemedRewards = async (req, res) => {
+  const userId = req.user.user_id;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+  try {
+    const queryText = `
+      SELECT
+        r.name,
+        r.image_url,
+        r.points_required,
+        rr.redeemed_at
+      FROM
+        reward_redemptions rr
+      JOIN
+        rewards r ON rr.reward_id = r.reward_id
+      WHERE
+        rr.user_id = $1
+      ORDER BY
+        rr.redeemed_at DESC;
+    `;
+
+    const result = await pool.query(queryText, [userId]);
+
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error("Error fetching redeemed rewards:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

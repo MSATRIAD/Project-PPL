@@ -14,6 +14,7 @@ router.post('/upload', historyController.uploadPredictionResult);
 router.get('/profile', profileController.getProfile);
 router.get('/rewards', profileController.getAllRewards);
 router.post('/redeem', profileController.redeemReward);
+router.get("/rewards/my", profileController.getMyRedeemedRewards);
 router.put('/profile/edit', profileController.editProfile);
 router.delete('/users/:user_id', profileController.deleteProfile);
 router.post(
