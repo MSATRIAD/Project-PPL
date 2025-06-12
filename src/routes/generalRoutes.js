@@ -12,6 +12,7 @@ router.get('/history', historyController.getHistory);
 router.get('/history/:history_id', historyController.getHistoryById);
 router.post('/upload', historyController.uploadPredictionResult);
 router.get('/users/:user_id', profileController.getProfile);
+router.get('/rewards', profileController.getAllRewards);
 router.post('/redeem', profileController.redeemReward);
 router.put('/users/edit/:user_id', profileController.editProfile);
 router.delete('/users/:user_id', profileController.deleteProfile);

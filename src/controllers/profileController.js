@@ -10,66 +10,44 @@ cloudinary.config({
 });
 
 exports.getProfile = async (req, res) => {
-  const { user_id } = req.params;
-  if (!user_id) return res.status(400).send("Id undefined");
+  const user_id = req.user.user_id;
+  if (!user_id) return res.status(401).json({ message: "Unauthorized" });
 
   try {
-    const profileResult = await pool.query(
-      "SELECT * FROM profile WHERE user_id = $1",
+    const profileQuery = await pool.query(
+      `SELECT p.user_id, p.full_name, p.bio, p.address, u.email, u.username, u.exp, u.points, u.profile_picture
+       FROM profile p
+       JOIN users u ON p.user_id = u.user_id
+       WHERE p.user_id = $1`,
       [user_id]
     );
 
-    if (profileResult.rows.length === 0) {
-      return res.status(404).send("Profile not found");
+    if (profileQuery.rows.length === 0) {
+      return res.status(404).json({ message: "Profile not found" });
     }
 
-    const user = await pool.query(
-      "SELECT exp, profile_picture FROM users WHERE user_id = $1",
-      [user_id]
-    );
-
-    const profile = profileResult.rows[0];
-    const exp = user.rows[0]?.exp || 0;
-    const profile_picture = user.rows[0]?.profile_picture || null;
-
-    res.status(200).json({
-      ...profile,
-      exp,
-      profile_picture,
-    });
-
+    res.status(200).json(profileQuery.rows[0]);
   } catch (err) {
     console.error(err);
-    res.status(500).send("Server error");
+    res.status(500).json({ message: "Server error" });
   }
 };
 
 exports.editProfile = async (req, res) => {
-  const { user_id } = req.params;
-  const { email, username, profile } = req.body;
+  const user_id = req.user.user_id;
+  const { full_name, bio, address } = req.body;
 
-  if (!user_id) return res.status(400).send("Id undefined");
+  if (!user_id) return res.status(401).json({ message: "Unauthorized" });
 
   try {
     await pool.query(
-      "UPDATE users SET email = $1, username = $2 WHERE user_id = $3",
-      [email, username, user_id]
-    );
-
-    await pool.query(
       "UPDATE profile SET full_name = $1, bio = $2, address = $3 WHERE user_id = $4",
-      [
-        profile.full_name,
-        profile.bio,
-        profile.address,
-        user_id
-      ]
+      [full_name, bio, address, user_id]
     );
-    
-    res.status(200).send("Profile updated successfully");
+    res.status(200).json({ message: "Profile updated successfully" });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Server error");
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -132,57 +110,67 @@ exports.uploadProfilePicture = async (req, res) => {
 exports.redeemReward = async (req, res) => {
   const userId = req.user.user_id;
   const { reward_id } = req.body;
+  const client = await pool.connect();
 
   try {
-    await pool.query('BEGIN');
+    await client.query("BEGIN");
 
-    const reward = await pool.query('SELECT * FROM rewards WHERE reward_id = $1', [reward_id]);
-    if (reward.rows.length === 0) {
-      await pool.query('ROLLBACK');
-      return res.status(404).json({ message: 'Reward not found.' });
+    const rewardResult = await client.query(
+      "SELECT * FROM rewards WHERE reward_id = $1",
+      [reward_id]
+    );
+    if (rewardResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ message: "Reward not found." });
     }
-    const rewardData = reward.rows[0];
+    const rewardData = rewardResult.rows[0];
 
-    const user = await pool.query('SELECT points FROM users WHERE user_id = $1', [userId]);
-    const userPoints = user.rows[0].points;
+    const userResult = await client.query(
+      "SELECT points FROM users WHERE user_id = $1 FOR UPDATE",
+      [userId]
+    );
+    const userPoints = userResult.rows[0].points;
 
     if (userPoints < rewardData.points_required) {
-      await pool.query('ROLLBACK');
-      return res.status(400).json({ message: 'Insufficient points.' });
+      await client.query("ROLLBACK");
+      return res.status(400).json({ message: "Poin Anda tidak cukup." });
     }
 
-    await pool.query('UPDATE users SET points = points - $1 WHERE user_id = $2', [
-      rewardData.points_required,
-      userId
+    const newPoints = userPoints - rewardData.points_required;
+    await client.query("UPDATE users SET points = $1 WHERE user_id = $2", [
+      newPoints,
+      userId,
     ]);
 
-    await pool.query(
-      'INSERT INTO reward_redemptions(user_id, reward_id, redeemed_at) VALUES($1, $2, NOW())',
+    await client.query(
+      "INSERT INTO reward_redemptions(user_id, reward_id, redeemed_at) VALUES($1, $2, NOW())",
       [userId, reward_id]
     );
 
-    await pool.query('COMMIT');
-
-    const updated = await pool.query('SELECT points FROM users WHERE user_id = $1', [userId]);
-
-    const allRewards = await pool.query('SELECT reward_id, name, image_url, points_required FROM rewards ORDER BY points_required ASC');
+    await client.query("COMMIT");
 
     res.json({
       success: true,
-      message: 'Reward redeemed successfully.',
-      remainingPoints: updated.rows[0].points,
-      redeemedReward: {
-        id: rewardData.id,
-        name: rewardData.name,
-        image: rewardData.image_url,
-        cost: rewardData.points_required
-      },
-      rewards: allRewards.rows
+      message: `Anda berhasil menukarkan ${rewardData.name}!`,
+      remainingPoints: newPoints,
     });
-
   } catch (err) {
-    await pool.query('ROLLBACK');
+    await client.query("ROLLBACK");
     console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
+  } finally {
+    client.release();
+  }
+};
+
+exports.getAllRewards = async (req, res) => {
+  try {
+    const allRewards = await pool.query(
+      "SELECT reward_id, name, description, image_url, points_required FROM rewards ORDER BY points_required ASC"
+    );
+    res.status(200).json(allRewards.rows);
+  } catch (err) {
+    console.error("Error fetching all rewards:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
