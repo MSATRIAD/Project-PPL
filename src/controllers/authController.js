@@ -144,6 +144,11 @@ exports.googleCallback = async (req, res) => {
         [username, email, null, profilePicture, true, 'google']
       );
       user = insert.rows[0];
+
+      await client.query(
+        "INSERT INTO profile (user_id, full_name, bio, address) VALUES ($1, $2, $3, $4)",
+        [user.user_id, "", "", ""]
+      );
     }
 
     const token = jwt.sign(
@@ -370,24 +375,33 @@ exports.resendEmail = async (req, res) => {
       [user.user_id, token, expiresAt]
     );
 
+    const verificationPageUrl = "https://becycle-web.netlify.app";
+    const verificationPagePath = "/verify-email";
+
+    const verificationLink = `${verificationPageUrl}${verificationPagePath}?id=${user.user_id}&token=${token}`;
+
     const transporter = nodemailer.createTransport({
-      service: 'Gmail',
+      service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
     });
 
-    const verificationLink = `https://project-ppl-production.up.railway.app/auth/verify-email/${user.user_id}/${token}`;
-
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: user.email,
-      subject: 'Verify your email (Resend)',
-      html: `<p>Click this link to verify your email: <a href="${verificationLink}">${verificationLink}</a></p>`,
+      from: `"Becycle Support" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Verifikasi Email Akun Becycle Anda (Resend)",
+      html: `<p>Halo ${user.username || user.email},</p>
+             <p>Terima kasih sudah mendaftar. Silakan klik link di bawah ini untuk memverifikasi alamat email Anda:</p>
+             <p><a href="${verificationLink}">Verifikasi Email Saya</a></p>
+             <p>Link ini akan kedaluwarsa dalam 1 jam.</p>
+             <p>Jika Anda tidak melakukan registrasi akun, abaikan email ini.</p>
+             <p>Terima kasih,</p>
+             <p>Tim Becycle</p>`,
     });
 
-    res.status(200).send('Email verifikasi telah dikirim ulang');
+    res.status(200).json({message: 'Email verifikasi telah dikirim ulang'});
   } catch (err) {
     console.error('Error resending email:', err.message);
     res.status(500).send('Gagal mengirim ulang email verifikasi');
@@ -416,7 +430,10 @@ exports.resendForgotPasswordEmail = async (req, res) => {
       [user.user_id, token, expires]
     );
 
-    const resetLink = `https://project-ppl-production.up.railway.app/auth/reset-password/${token}`;
+    const netlifyAppBaseUrl = "https://becycle-web.netlify.app";
+    const resetPagePath = "/reset-password";
+
+    const resetLink = `${netlifyAppBaseUrl}${resetPagePath}?token=${token}`
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -427,13 +444,20 @@ exports.resendForgotPasswordEmail = async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: `"Support" <${process.env.EMAIL_USER}>`,
+      from: `"Becycle Support" <${process.env.EMAIL_USER}>`,
       to: user.email,
-      subject: "Reset Your Password (Resend)",
-      html: `<p>Click this link to reset your password: <a href="${resetLink}">${resetLink}</a></p>`,
+      subject: "Link Reset Password Akun Becycle Anda (Resend)",
+      html: `<p>Halo ${user.username || user.email},</p>
+             <p>Anda meminta untuk mereset password akun Anda.</p>
+             <p>Silakan klik link berikut untuk melanjutkan proses reset password:</p>
+             <p><a href="${resetLink}">Reset Password Saya</a></p>
+             <p>Link ini akan kedaluwarsa dalam 1 jam.</p>
+             <p>Jika Anda tidak meminta reset password, abaikan email ini.</p>
+             <p>Terima kasih,</p>
+             <p>Tim Becycle</p>`,
     });
 
-    res.status(200).send("Email reset password telah dikirim ulang");
+    res.status(200).json({message: "Email reset password telah dikirim ulang"});
   } catch (err) {
     console.error("Error sending reset password email:", err.message);
     res.status(500).send("Gagal mengirim ulang email reset password");
