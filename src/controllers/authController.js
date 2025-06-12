@@ -106,6 +106,24 @@ exports.login = async (req, res) => {
   }
 };
 
+exports.logout = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return res.sendStatus(204);
+    }
+
+    await pool.query("DELETE FROM refresh_tokens WHERE token = $1", [
+      refreshToken,
+    ]);
+
+    return res.sendStatus(204);
+  } catch (err) {
+    console.error("Logout error:", err);
+    return res.status(500).json({ message: "Server error during logout." });
+  }
+};
+
 exports.googleCallback = async (req, res) => {
   try {
     if (!req.user) {

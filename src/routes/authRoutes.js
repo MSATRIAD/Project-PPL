@@ -21,5 +21,6 @@ router.post("/refresh-token", auth.refreshToken);
 router.get("/reset-password/:token", auth.renderResetPasswordPage);
 router.post("/resend-email", auth.resendEmail);
 router.post("/resend-reset", auth.resendForgotPasswordEmail);
+router.post("/logout", auth.logout);
 
 module.exports = router;
