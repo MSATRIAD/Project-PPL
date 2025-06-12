@@ -24,7 +24,7 @@ exports.getArticles = async (req, res) => {
       lastFetched = now;
     } catch (error) {
       console.error("Failed to fetch articles:", error.message);
-      return res.status(500).send("Failed to fetch articles");
+      return res.status(500).json({message: "Failed to fetch articles"});
     }
   }
   res.json(cachedArticles);
