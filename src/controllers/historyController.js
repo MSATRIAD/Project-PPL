@@ -31,19 +31,11 @@ exports.getHistoryById = async (req, res) => {
   try {
     const queryText = `
       SELECT
-        h.history_id,
-        h.image_url,
-        h.prediction_result,
-        h.created_at,
-        h.user_id,
-        h.recycle_id,
-        r.material_type,
-        r.can_be_recycled,
-        r.recycle_process,
-        r.possible_products
+        h.history_id, h.image_url, h.prediction_result, h.created_at, h.user_id, h.recycle_id,
+        r.material_type, r.can_be_recycled, r.recycle_process, r.possible_products
       FROM
         result_history h
-      JOIN
+      LEFT JOIN 
         recycle_info r ON h.recycle_id = r.recycle_id
       WHERE
         h.user_id = $1 AND h.history_id = $2;
